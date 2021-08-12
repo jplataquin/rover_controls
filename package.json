@@ -1,0 +1,21 @@
+{
+  "name": "rover",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "JP Lataquin",
+  "license": "MIT",
+  "dependencies": {
+    "@serialport/list": "^9.2.0",
+    "adarna": "^1.0.3",
+    "express": "^4.17.1",
+    "serialport": "^9.2.0",
+    "socket.io": "^4.1.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en-US"> <!--<![endif]-->
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <link rel="pingback" href="https: //domainname.com/xmlrpc.php" />
+        <title></title>
+        <!-- style and script resources -->
+        <link rel="stylesheet" href="" media="all">
+        <script src=""></script>
+        <!--meta properties -->
+        <meta name="description" content=" Your site description." />
+        <!--detailed robots meta https://developers.google.com/search/reference/robots_meta_tag -->
+        <meta name="robots" content="index, follow, max-snippet: -1, max-image-preview:large, max-video-preview: -1" />
+        <link rel="canonical" href="" />
+        <!--open graph meta tags for social sites and search engines-->
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="  Opengraph content 25 char are best" />
+        <meta property="og:description" content="  #description." />
+        <meta property="og:url" content="" />
+        <meta property="og:site_name" content="" />
+        <meta property="og:image" content="images//hom-banner-compressed.jpg" />
+        <meta property="og:image:secure_url" content="images//hom-banner-compressed.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="660" />
+        <!--twitter description-->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:description" content="." />
+        <meta name="twitter:title" content="" />
+        <meta name="twitter:site" content="@" />
+        <meta name="twitter:image" content="images/hom-banner-compressed.jpg" />
+        <meta name="twitter:creator" content="@" />
+        <!--opengraph tags for location or address for information panel in google-->
+        <meta name="og:latitude" content="" />
+        <meta name="og:longitude" content="" />
+        <meta name="og:street-address" content="" />
+        <meta name="og:locality" content="" />
+        <meta name="og:region" content="" />
+        <meta name="og:postal-code" content="" />
+        <meta name="og:country-name" content="" />
+        <!--search engine verification-->
+        <meta name="google-site-verification" content="" />
+        <meta name="yandex-verification" content="" />
+        <!--powered by meta-->
+        <meta name="generator" content="" />
+        <!-- Site fevicon icons -->
+        <link rel="icon" href="images/icon/cropped-cropped-favicon-1-1-32x32.png" sizes="32x32" />
+        <link rel="icon" href="images/icon/cropped-cropped-favicon-1-1-192x192.png" sizes="192x192" />
+        <link rel="apple-touch-icon-precomposed" href="images/icon/cropped-cropped-favicon-1-1-180x180.png" />
+        <meta name="msapplication-TileImage" content="images/icon/cropped-cropped-favicon-1-1-270x270.png" />
+        <!--complete list of meta tags at - https://gist.github.com/lancejpollard/1978404 -->
+
+        <link rel="stylesheet" href="/public/bootstrap-5.1.0/css/bootstrap.min.css"/>
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        
+        <div id="app"></div>
+        <link rel="stylesheet" type="text/css" href="/" media="print" />
+        <script src="/public/bootstrap-5.1.0/js/bootstrap.min.js"></script>
+        <script type="module">
+            import '/socket.io/socket.io.js';
+            import {Template,render} from '/adarna/dist/adarna.js';
+            import ArrowPadsComponent from '/public/components/ArrowPadsComponent.js';
+
+            let socket  = io.connect(window.location.origin);
+            let app     = document.querySelector('#app');
+            let t       = new Template();
+
+            let commandHistory  = t.div(); 
+            let arrowPad        = new ArrowPadsComponent();
+
+            let forwardCommand      = t.input({type:'text',class:'form-control',value:'FORWARD'});
+            let backwardCommand     = t.input({type:'text',class:'form-control',value:'BACKWARD'});
+            let turnLeftCommand     = t.input({type:'text',class:'form-control',value:'TURN_LEFT'});
+            let turnRightCommand    = t.input({type:'text',class:'form-control',value:'TURN_RIGHT'});
+            let stopCommand         = t.input({type:'text',class:'form-control',value:'STOP'});
+            let statusEl            =  t.input({class:'form-control',type:'text',disabled:true});
+            
+            function getCommands(){
+
+                return {
+                    UP: forwardCommand.value.trim(),
+                    DOWN: backwardCommand.value.trim(),
+                    LEFT: turnLeftCommand.value.trim(),
+                    RIGHT:turnRightCommand.value.trim(),
+                    STOP: stopCommand.value.trim()
+                }
+            }
+
+            
+            socket.emit('status',(reply)=>{
+                statusEl.value = reply;
+            });
+
+            function connectToPort(port){
+                port = port.trim();
+                if(port == ''){
+                    alert('Port cannot be empty');
+                    return false;
+                }
+
+                socket.emit('connectToPort',port,(reply)=>{
+                    statusEl.value = reply;
+                });
+            }
+
+            arrowPad.handler.onchange((key,time)=>{
+
+                if(key == ''){
+                    key = 'STOP';
+                }
+
+                let commands = getCommands();
+
+                socket.emit('command',commands[key],(result)=>{
+
+                    if(result){
+                        commandHistory.prepend(t.div({style:{
+                            minHeight:'10px',
+                            width:'100%',
+                            backgroundColor:'violet'
+                        }},key+' - '+time+' - '+commands[key]));
+                    }else{
+                        commandHistory.prepend(t.div({style:{
+                            minHeight:'10px',
+                            width:'100%',
+                            backgroundColor:'violet'
+                        }},'Not connected'));
+                    }
+                    
+                });
+
+            });
+
+
+           
+
+            let view = t.div({class:'container'},(el)=>{
+
+                t.div({class:'row'},()=>{
+                    t.div({class:'col s6'},(el)=>{
+                        el.template.append(arrowPad);
+                    });
+                    t.div({class:'col s6'},(el)=>{
+                        
+                        t.div({class:'form-group'},()=>{
+                            t.label('Status');
+                            el.template.append(statusEl);
+                            
+                        });
+                        
+                        let port;
+                        
+                        t.div({class:'form-group'},()=>{
+                            t.label('SERIAL PORT NAME');
+                            port = t.input({class:'form-control',type:'text'});
+                            
+                        });
+
+                        t.br();
+                        t.div({class:'text-right'},()=>{
+                            let connect = t.button({class:'btn btn-primary'},'Connect');
+
+                            connect.onclick = ()=>{
+                                connectToPort(port.value);
+                            };
+                        });
+                       
+
+
+                    });
+                });
+              
+
+                t.hr();
+                t.div({class:'row'},(el)=>{
+                    t.div({class:'col s6'},(el)=>{
+                        t.h3('History');
+                        el.template.append(commandHistory);
+                    });
+                    t.div({class:'col s6'},()=>{
+                        t.h3('COMMANDS');
+                        t.div({},()=>{
+                            t.div({class:'cols form-group'},(el)=>{
+                                t.label('Forward');
+                                el.template.append(forwardCommand);
+                            });
+                            t.div({class:'col form-group'},(el)=>{
+                                t.label('Back');
+                                el.template.append(backwardCommand);
+                            });
+                            t.div({class:'col form-group'},(el)=>{
+                                t.label('Turn Left');
+                                el.template.append(turnLeftCommand);
+                            });
+                            t.div({class:'form-group'},(el)=>{
+                                t.label('Turn Right');
+                                el.template.append(turnRightCommand);
+                            });
+                            t.div({class:'form-group'},(el)=>{
+                                t.label('Stop');
+                                el.template.append(stopCommand);
+                            });
+                        });//div
+
+                    });//div
+                });//div
+               
+
+               
+            });
+
+            render(view).to(app);
+        </script>
+    </body>
+</html>
